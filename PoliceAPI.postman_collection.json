@@ -1,0 +1,89 @@
+{
+	"info": {
+		"_postman_id": "64e2c5e0-de1f-452f-bec1-1c02c29b42d5",
+		"name": "PoliceAPI",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Test Seinior officers object",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const jsonData = pm.response.json();\r",
+							"\r",
+							"/**\r",
+							" * Validating call to list of forces\r",
+							" */\r",
+							"pm.test('Array values should have all keys', () => {\r",
+							"    pm.response.to.have.status(200);\r",
+							"    pm.expect(jsonData).to.be.an('array');\r",
+							"    jsonData.forEach((item) => {\r",
+							"        pm.expect(item).to.have.all.keys('id', 'name');\r",
+							"    });\r",
+							"});\r",
+							"\r",
+							"const pause = setInterval(() => {}, 1000);\r",
+							"\r",
+							"/**\r",
+							" * Send request\r",
+							" * @returns <Promise.Array.<object>>\r",
+							" */\r",
+							"function sendRequest(req) {\r",
+							"    return new Promise((resolve, reject) => {\r",
+							"        pm.sendRequest(req, (err, res) => {\r",
+							"            if (err) {\r",
+							"                return reject(err);\r",
+							"            }\r",
+							"            return resolve(res.json());\r",
+							"        })\r",
+							"    });\r",
+							"}\r",
+							"\r",
+							"/**\r",
+							" * Validation of keys in returned array of officers\r",
+							" * we validate only if the region has officers\r",
+							" * also we use async to meet constrains on call limits https://data.police.uk/docs/api-call-limits/ \r",
+							" */\r",
+							"(async function main() {\r",
+							"    for(let i=0; i< jsonData.length; i=i+1){\r",
+							"        const region = await sendRequest({\r",
+							"            url: 'https://data.police.uk/api/forces/'+jsonData[i].id+'/people',\r",
+							"            method: 'GET'\r",
+							"        });\r",
+							"        if(region.length>0){\r",
+							"            region.forEach((officer) => {\r",
+							"                pm.test('Validate keys in response', () => {\r",
+							"                    console.log(officer)\r",
+							"                    pm.expect(officer).to.have.all.keys('bio', 'name','contact_details','rank')               \r",
+							"                });\r",
+							"            })\r",
+							"        }\r",
+							"    }\r",
+							"})();"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{BaseURL}}/api/forces",
+					"host": [
+						"{{BaseURL}}"
+					],
+					"path": [
+						"api",
+						"forces"
+					]
+				},
+				"description": "A list of all the police forces available via the API except the British Transport Police, which is excluded from the list returned. Unique force identifiers obtained here are used in requests for force-specific data via other methods."
+			},
+			"response": []
+		}
+	]
+}
